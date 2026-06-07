@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Real Estate AI Dashboard</title>
+
+    <style>
+        /* =========================================
+           1. BODY BACKGROUND (THEME SETTINGS)
+           ========================================= */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+
+            background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+
+        /* =========================================
+           2. NAVBAR STYLING
+           ========================================= */
+        .navbar {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 20px 40px;
+
+            /* 🔴 TEXT COLOR BLACK */
+            color: black;
+
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+        }
+
+        /* =========================================
+           3. LAYOUT & CARD STYLING
+           ========================================= */
+        .container {
+            max-width: 800px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0px 15px 35px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+            text-transform: uppercase;
+            font-size: 22px;
+            letter-spacing: 1px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #4a5568;
+            display: block;
+            text-transform: uppercase;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            margin-top: 30px;
+            padding: 16px;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            color: white;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .result-box {
+            background: #f0fff4;
+            padding: 20px;
+            border: 2px solid #48bb78;
+            margin-top: 25px;
+            border-radius: 8px;
+            font-weight: 700;
+            color: #2f855a;
+            font-size: 20px;
+            display: none;
+            text-align: center;
+        }
+
+        /* =========================================
+           4. REMOVE NUMBER ARROWS
+           ========================================= */
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <div class="navbar">🏠 Real Estate AI Dashboard</div>
+
+    <div class="container">
+        <div class="card">
+            <h2>Price Prediction</h2>
+
+            <form id="prediction-form">
+                <div class="form-grid">
+                    <div>
+                        <label>Area (Marla)</label>
+                        <input type="number" id="area_marla" value="10">
+                    </div>
+
+                    <div>
+                        <label>Bedrooms</label>
+                        <input type="number" id="bedrooms" value="3">
+                    </div>
+
+                    <div>
+                        <label>Baths</label>
+                        <input type="number" id="baths" value="4">
+                    </div>
+
+                    <div>
+                        <label>City</label>
+                        <input type="text" id="city" value="lahore">
+                    </div>
+
+                    <div>
+                        <label>Location</label>
+                        <input type="text" id="location" value="dha">
+                    </div>
+
+                    <div>
+                        <label>Locality</label>
+                        <input type="text" id="locality" value="dha phase 6">
+                    </div>
+                </div>
+
+                <button type="submit">Predict Price</button>
+            </form>
+
+            <div id="prediction-result" class="result-box"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', e => {
+            e.preventDefault();
+
+            const resultDiv = document.getElementById('prediction-result');
+            resultDiv.style.display = 'none';
+
+            const payload = {
+                baths: +document.getElementById('baths').value,
+                bedrooms: +document.getElementById('bedrooms').value,
+                area_marla: +document.getElementById('area_marla').value,
+                city: document.getElementById('city').value,
+                location: document.getElementById('location').value,
+                locality: document.getElementById('locality').value
+            };
+
+            fetch('/api/predict', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify(payload)
+            })
+            .then(r => r.json())
+            .then(data => {
+                let price = Math.round(data.predicted_price).toLocaleString();
+                resultDiv.innerHTML = `Estimated Price: PKR <strong>${price}</strong>`;
+                resultDiv.style.display = 'block';
+            })
+            .catch(() => {
+                resultDiv.innerHTML = "Error connecting to server.";
+                resultDiv.style.display = 'block';
+            });
+        });
+    </script>
+
+</body>
+</html>
